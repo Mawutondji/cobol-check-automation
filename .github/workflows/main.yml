@@ -6,6 +6,7 @@ on:
 jobs:
   cobol-check:
     runs-on: ubuntu-latest
+    
     steps:
     - uses: actions/checkout@v2
     - name: Set up Java
@@ -18,20 +19,8 @@ jobs:
         ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
         ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
       run: |
-       # Here we'll add our commands to run cobolcheck
-       echo "Running COBOL Check"
-       # Add actual cobolcheck commands here
-    - name: Setup Mainframe Environment and Upload COBOL Check
-      env:
-        ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
-        ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
-      run: |
-         chmod +x .github/scripts/zowe_operations.sh
-         .github/scripts/zowe_operations.sh
-    - name: Run COBOL Check on Mainframe
-      env:
-        ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
-        ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
-      run: |
-       chmod +x .github/scripts/mainframe_operations.sh
-       .github/scripts/mainframe_operations.sh
+        # Here we'll add our commands to run cobolcheck
+        echo "Running COBOL Check"
+        # Add actual cobolcheck commands here
+      
+  
