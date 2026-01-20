@@ -2,6 +2,10 @@
 
 # zowe_operations.sh
 
+# Fail fast and show commands as they run
+set -euo pipefail
+set -x
+
 # Ensure Zowe CLI is available
 if ! command -v zowe >/dev/null 2>&1; then
   echo "Error: Zowe CLI not found. Install @zowe/cli before running this script."
@@ -25,4 +29,3 @@ zowe zos-files upload dir-to-uss "./cobol-check" "/z/$LOWERCASE_USERNAME/cobolch
 # Verify upload
 echo "Verifying upload:"
 zowe zos-files list uss-files "/z/$LOWERCASE_USERNAME/cobolcheck"
-
