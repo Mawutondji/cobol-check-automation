@@ -29,7 +29,7 @@ fi
 # Upload files
 timeout 300s zowe zos-files upload dir-to-uss "./cobol-check" "/z/$LOWERCASE_USERNAME/cobolcheck" --recursive \
   --zosmf-profile zprofile \
-  --binary-files "cobol-check-0.2.9.jar"
+  --binary-files "bin/*.jar"
 # Verify upload
 echo "Verifying upload:"
 timeout 60s zowe zos-files list uss-files "/z/$LOWERCASE_USERNAME/cobolcheck" --zosmf-profile zprofile
