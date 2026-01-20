@@ -23,6 +23,29 @@ jobs:
       run: |
         npm install -g @zowe/cli
         zowe --version
+    # Secrets required: ZOWE_HOST, ZOWE_PORT, ZOWE_USERNAME, ZOWE_PASSWORD
+    - name: Validate Zowe secrets
+      env:
+        ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
+        ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
+        ZOWE_HOST: ${{ secrets.ZOWE_HOST }}
+        ZOWE_PORT: ${{ secrets.ZOWE_PORT }}
+      run: |
+        test -n "$ZOWE_HOST"
+        test -n "$ZOWE_PORT"
+        test -n "$ZOWE_USERNAME"
+        test -n "$ZOWE_PASSWORD"
+    - name: Configurer Zowe profile
+      env:
+        ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
+        ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
+        ZOWE_HOST: ${{ secrets.ZOWE_HOST }}
+        ZOWE_PORT: ${{ secrets.ZOWE_PORT }}
+      run: |
+        zowe profiles create zosmf zprofile \
+          --host "$ZOWE_HOST" --port "$ZOWE_PORT" \
+          --user "$ZOWE_USERNAME" --password "$ZOWE_PASSWORD" \
+          --reject-unauthorized false
     - name: Setup Mainframe Environment and Upload COBOL Check  
       timeout-minutes: 15
       env:
@@ -31,8 +54,3 @@ jobs:
       run: |
         chmod +x .github/scripts/zowe_operations.sh
         .github/scripts/zowe_operations.sh 
-        
-
-       
-      
-  
