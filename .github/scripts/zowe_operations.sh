@@ -16,19 +16,20 @@ fi
 LOWERCASE_USERNAME=$(echo "$ZOWE_USERNAME" | tr '[:upper:]' '[:lower:]')
 
 # Fast connectivity check to fail early if the host is slow or unreachable
-timeout 60s zowe zosmf check status
+timeout 60s zowe zosmf check status --zosmf-profile zprofile
 
 # Check if directory exists, create if it doesn't
-if ! timeout 60s zowe zos-files list uss-files "/z/$LOWERCASE_USERNAME/cobolcheck" &>/dev/null; then
+if ! timeout 60s zowe zos-files list uss-files "/z/$LOWERCASE_USERNAME/cobolcheck" --zosmf-profile zprofile &>/dev/null; then
   echo "Directory does not exist. Creating it..."
-  timeout 60s zowe zos-files create uss-directory /z/$LOWERCASE_USERNAME/cobolcheck
+  timeout 60s zowe zos-files create uss-directory /z/$LOWERCASE_USERNAME/cobolcheck --zosmf-profile zprofile
 else
   echo "Directory already exists."
 fi
 
 # Upload files
 timeout 300s zowe zos-files upload dir-to-uss "./cobol-check" "/z/$LOWERCASE_USERNAME/cobolcheck" --recursive \
+  --zosmf-profile zprofile \
   --binary-files "cobol-check-0.2.9.jar"
 # Verify upload
 echo "Verifying upload:"
-timeout 60s zowe zos-files list uss-files "/z/$LOWERCASE_USERNAME/cobolcheck"
+timeout 60s zowe zos-files list uss-files "/z/$LOWERCASE_USERNAME/cobolcheck" --zosmf-profile zprofile
