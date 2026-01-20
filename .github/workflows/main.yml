@@ -9,17 +9,23 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
+    - name: Set up Node.js (for Zowe CLI)
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
     - name: Set up Java
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
         java-version: '11'
-        distribution: 'adopt'  # or 'temurin'
+        distribution: 'temurin'
         
     - name: Installer Zowe CLI
       run: |
         npm install -g @zowe/cli
-        zowe --version  
+        zowe --version
     - name: Setup Mainframe Environment and Upload COBOL Check  
+      timeout-minutes: 15
       env:
         ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
         ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
@@ -27,7 +33,3 @@ jobs:
         chmod +x .github/scripts/zowe_operations.sh
         .github/scripts/zowe_operations.sh 
         
-
-       
-      
-  
