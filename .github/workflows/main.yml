@@ -49,17 +49,15 @@ jobs:
 
         config = {
             "profiles": {
-                "zosmf": {
-                    "zprofile": {
-                        "type": "zosmf",
-                        "properties": {
-                            "host": os.environ["ZOWE_HOST"],
-                            "port": int(os.environ["ZOWE_PORT"]),
-                            "user": os.environ["ZOWE_USERNAME"],
-                            "password": os.environ["ZOWE_PASSWORD"],
-                            "rejectUnauthorized": False,
-                        },
-                    }
+                "zprofile": {
+                    "type": "zosmf",
+                    "properties": {
+                        "host": os.environ["ZOWE_HOST"],
+                        "port": int(os.environ["ZOWE_PORT"]),
+                        "user": os.environ["ZOWE_USERNAME"],
+                        "password": os.environ["ZOWE_PASSWORD"],
+                        "rejectUnauthorized": False,
+                    },
                 }
             },
             "defaults": {"zosmf": "zprofile"},
