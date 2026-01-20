@@ -14,6 +14,11 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'  # or 'temurin'
+        
+    - name: Installer Zowe CLI
+      run: |
+        npm install -g @zowe/cli
+        zowe --version  
     - name: Setup Mainframe Environment and Upload COBOL Check  
       env:
         ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
