@@ -1,35 +1,84 @@
-#!/bin/bash
+name: COBOL Check Automation
+on:
+  push:
+      branches: [ main ]
+      
+jobs:
+  cobol-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Node.js (for Zowe CLI)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        
+    - name: Installer Zowe CLI
+      run: |
+        npm install -g @zowe/cli
+        zowe --version
+    # Secrets required: ZOWE_HOST, ZOWE_PORT, ZOWE_USERNAME, ZOWE_PASSWORD
+    - name: Validate Zowe secrets
+      env:
+        ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
+        ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
+        ZOWE_HOST: ${{ secrets.ZOWE_HOST }}
+        ZOWE_PORT: ${{ secrets.ZOWE_PORT }}
+      run: |
+        test -n "$ZOWE_HOST"
+        test -n "$ZOWE_PORT"
+        test -n "$ZOWE_USERNAME"
+        test -n "$ZOWE_PASSWORD"
+    - name: Configurer Zowe CLI
+      env:
+        ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
+        ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
+        ZOWE_HOST: ${{ secrets.ZOWE_HOST }}
+        ZOWE_PORT: ${{ secrets.ZOWE_PORT }}
+      run: |
+        python - <<'PY'
+        import json
+        import os
+        import pathlib
 
-# zowe_operations.sh
+        config = {
+            "profiles": {
+                "zprofile": {
+                    "type": "zosmf",
+                    "properties": {
+                        "host": os.environ["ZOWE_HOST"],
+                        "port": int(os.environ["ZOWE_PORT"]),
+                        "user": os.environ["ZOWE_USERNAME"],
+                        "password": os.environ["ZOWE_PASSWORD"],
+                        "rejectUnauthorized": False,
+                    },
+                }
+            },
+            "defaults": {"zosmf": "zprofile"},
+        }
 
-# Fail fast and show commands as they run
-set -euo pipefail
-set -x
+        path = pathlib.Path.home() / ".zowe" / "zowe.config.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(config, indent=2))
+        print(f"Wrote {path}")
+        PY
+    - name: Setup Mainframe Environment and Upload COBOL Check
+      timeout-minutes: 15
+      env:
+        ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
+        ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
+      run: |
+        set -euxo pipefail
+        chmod +x .github/scripts/zowe_operations.sh
+        .github/scripts/zowe_operations.sh
+        
 
-# Ensure Zowe CLI is available
-if ! command -v zowe >/dev/null 2>&1; then
-  echo "Error: Zowe CLI not found. Install @zowe/cli before running this script."
-  exit 127
-fi
-
-# Convert username to lowercase
-LOWERCASE_USERNAME=$(echo "$ZOWE_USERNAME" | tr '[:upper:]' '[:lower:]')
-
-# Fast connectivity check to fail early if the host is slow or unreachable
-timeout 60s zowe zosmf check status --zosmf-profile zprofile
-
-# Check if directory exists, create if it doesn't
-if ! timeout 60s zowe zos-files list uss-files "/z/$LOWERCASE_USERNAME/cobolcheck" --zosmf-profile zprofile &>/dev/null; then
-  echo "Directory does not exist. Creating it..."
-  timeout 60s zowe zos-files create uss-directory /z/$LOWERCASE_USERNAME/cobolcheck --zosmf-profile zprofile
-else
-  echo "Directory already exists."
-fi
-
-# Upload files
-timeout 300s zowe zos-files upload dir-to-uss "./cobol-check" "/z/$LOWERCASE_USERNAME/cobolcheck" --recursive \
-  --zosmf-profile zprofile \
-  --binary-files "bin/*.jar"
-# Verify upload
-echo "Verifying upload:"
-timeout 60s zowe zos-files list uss-files "/z/$LOWERCASE_USERNAME/cobolcheck" --zosmf-profile zprofile
+       
+      
+  
