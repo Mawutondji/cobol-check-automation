@@ -35,17 +35,41 @@ jobs:
         test -n "$ZOWE_PORT"
         test -n "$ZOWE_USERNAME"
         test -n "$ZOWE_PASSWORD"
-    - name: Configurer Zowe profile
+    - name: Configurer Zowe CLI
       env:
         ZOWE_USERNAME: ${{ secrets.ZOWE_USERNAME }}
         ZOWE_PASSWORD: ${{ secrets.ZOWE_PASSWORD }}
         ZOWE_HOST: ${{ secrets.ZOWE_HOST }}
         ZOWE_PORT: ${{ secrets.ZOWE_PORT }}
       run: |
-        zowe profiles create zosmf zprofile \
-          --host "$ZOWE_HOST" --port "$ZOWE_PORT" \
-          --user "$ZOWE_USERNAME" --password "$ZOWE_PASSWORD" \
-          --reject-unauthorized false
+        python - <<'PY'
+        import json
+        import os
+        import pathlib
+
+        config = {
+            "profiles": {
+                "zosmf": {
+                    "zprofile": {
+                        "type": "zosmf",
+                        "properties": {
+                            "host": os.environ["ZOWE_HOST"],
+                            "port": int(os.environ["ZOWE_PORT"]),
+                            "user": os.environ["ZOWE_USERNAME"],
+                            "password": os.environ["ZOWE_PASSWORD"],
+                            "rejectUnauthorized": False,
+                        },
+                    }
+                }
+            },
+            "defaults": {"zosmf": "zprofile"},
+        }
+
+        path = pathlib.Path.home() / ".zowe" / "zowe.config.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(config, indent=2))
+        print(f"Wrote {path}")
+        PY
     - name: Setup Mainframe Environment and Upload COBOL Check  
       timeout-minutes: 15
       env:
@@ -54,3 +78,8 @@ jobs:
       run: |
         chmod +x .github/scripts/zowe_operations.sh
         .github/scripts/zowe_operations.sh 
+        
+
+       
+      
+  
