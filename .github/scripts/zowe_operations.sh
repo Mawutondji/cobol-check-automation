@@ -33,6 +33,7 @@ if [ -z "$JAR_PATH" ]; then
   exit 1
 fi
 JAR_FILENAME=$(basename "$JAR_PATH")
+export UPLOAD_DIR
 UPLOAD_DIR=$(mktemp -d)
 python - <<'PY'
 import os
