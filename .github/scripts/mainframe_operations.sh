@@ -13,14 +13,17 @@ java -version
 # Set ZOWE_USERNAME
 ZOWE_USERNAME="$ZOWE_USERNAME" # Replace with the actual username
 
-# Change to the cobolcheck directory
-cd cobolcheck
+# Change to the cobol-check directory
+cd cobol-check
 echo "Changed to $(pwd)"
 ls -al
 
-# Make cobolcheck executable
-chmod +x cobolcheck
-echo "Made cobolcheck executable"
+# Locate COBOL Check JAR
+JAR_PATH=$(find ./bin -maxdepth 1 -name "*.jar" | head -n 1)
+if [ -z "$JAR_PATH" ]; then
+  echo "Error: No JAR found under ./bin."
+  exit 1
+fi
 
 # Make script in scripts directory executable
 cd scripts
@@ -33,7 +36,7 @@ run_cobolcheck() {
   program=$1
   echo "Running cobolcheck for $program"
   # Run cobolcheck, but don't exit if it fails
-  ./cobolcheck -p $program
+  java -jar "$JAR_PATH" -p "$program"
   echo "Cobolcheck execution completed for $program (exceptions may have occurred)"
 
   # Check if CC##99.CBL was created, regardless of cobolcheck exit status
