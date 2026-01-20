@@ -33,9 +33,25 @@ if [ -z "$JAR_PATH" ]; then
   exit 1
 fi
 JAR_FILENAME=$(basename "$JAR_PATH")
-timeout 300s zowe zos-files upload dir-to-uss "./cobol-check" "/z/$LOWERCASE_USERNAME/cobolcheck" --recursive \
-  --zosmf-profile zprofile \
-  --exclude-files "bin/$JAR_FILENAME"
+UPLOAD_DIR=$(mktemp -d)
+python - <<'PY'
+import os
+import shutil
+from pathlib import Path
+
+src = Path("cobol-check")
+dst = Path(os.environ["UPLOAD_DIR"])
+
+def ignore_jar(dir_path, names):
+    rel = Path(dir_path).relative_to(src)
+    if rel == Path("bin"):
+        return [n for n in names if n.endswith(".jar")]
+    return []
+
+shutil.copytree(src, dst, ignore=ignore_jar, dirs_exist_ok=True)
+PY
+timeout 300s zowe zos-files upload dir-to-uss "$UPLOAD_DIR" "/z/$LOWERCASE_USERNAME/cobolcheck" --recursive \
+  --zosmf-profile zprofile
 timeout 120s zowe zos-files upload file-to-uss "$JAR_PATH" "/z/$LOWERCASE_USERNAME/cobolcheck/bin/$JAR_FILENAME" \
   --zosmf-profile zprofile \
   --binary
