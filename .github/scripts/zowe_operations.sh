@@ -27,9 +27,15 @@ else
 fi
 
 # Upload files
+JAR_PATH=$(find "./cobol-check/bin" -maxdepth 1 -name "*.jar" | head -n 1)
+if [ -z "$JAR_PATH" ]; then
+  echo "Error: No JAR found under ./cobol-check/bin."
+  exit 1
+fi
+JAR_RELATIVE_PATH=${JAR_PATH#./cobol-check/}
 timeout 300s zowe zos-files upload dir-to-uss "./cobol-check" "/z/$LOWERCASE_USERNAME/cobolcheck" --recursive \
   --zosmf-profile zprofile \
-  --binary-files "bin/*.jar"
+  --binary-files "$JAR_RELATIVE_PATH"
 # Verify upload
 echo "Verifying upload:"
 timeout 60s zowe zos-files list uss-files "/z/$LOWERCASE_USERNAME/cobolcheck" --zosmf-profile zprofile
